@@ -1,0 +1,13 @@
+services:
+  ogfn:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3551:3551"
+      - "80:80"
+    volumes:
+      - ./data:/app/data
+    environment:
+      PUBLIC_HOST: "127.0.0.1"   # the IP players use to reach this machine
+      ADMIN_KEY: ""              # set to turn on the admin API
+      INVITE_CODE: ""            # set to require an invite code to sign up

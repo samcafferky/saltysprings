@@ -1,0 +1,14 @@
+{
+  "featured": [
+    { "items": ["AthenaCharacter:CID_028_Athena_Commando_F"], "price": 1200 },
+    { "items": ["AthenaCharacter:CID_017_Athena_Commando_M"], "price": 1200 },
+    { "items": ["AthenaCharacter:CID_035_Athena_Commando_M_Medieval"], "price": 2000 }
+  ],
+  "daily": [
+    { "items": ["AthenaCharacter:CID_030_Athena_Commando_M_Halloween"], "price": 1200 },
+    { "items": ["AthenaCharacter:CID_029_Athena_Commando_F_Halloween"], "price": 1200 },
+    { "items": ["AthenaDance:EID_Floss"], "price": 500 },
+    { "items": ["AthenaDance:EID_TakeTheL"], "price": 500 },
+    { "items": ["AthenaDance:EID_BestMates"], "price": 500 }
+  ]
+}

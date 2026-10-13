@@ -1,0 +1,49 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3551,
+    "publicHost": "127.0.0.1",
+    "trustProxy": false,
+    "logRequests": false,
+    "rateLimits": {
+      "loginPerMinute": 30,
+      "registerPerMinute": 10
+    }
+  },
+  "xmpp": {
+    "enabled": true,
+    "port": 80,
+    "domain": "prod.ol.epicgames.com"
+  },
+  "database": {
+    "path": "data/ogfn.db"
+  },
+  "registration": {
+    "enabled": true,
+    "inviteCode": ""
+  },
+  "auth": {
+    "accessTokenHours": 8,
+    "refreshTokenHours": 24,
+    "exchangeCodeMinutes": 5
+  },
+  "game": {
+    "defaultSeason": 2,
+    "startingVbucks": 1000,
+    "giveAllCosmetics": false,
+    "cosmeticsSource": "https://fortnite-api.com/v2/cosmetics/br",
+    "news": [
+      {
+        "title": "Welcome!",
+        "body": "You are playing on a private OGFN server.",
+        "image": ""
+      }
+    ]
+  },
+  "matchmaking": {
+    "gameServers": []
+  },
+  "admin": {
+    "apiKey": ""
+  }
+}

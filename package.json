@@ -1,0 +1,30 @@
+{
+  "name": "ogfn-server-emulator",
+  "version": "1.0.0",
+  "description": "Private backend emulator for old-generation Fortnite builds",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.js",
+    "cli": "node --disable-warning=ExperimentalWarning scripts/cli.js",
+    "test": "node --disable-warning=ExperimentalWarning --test 'test/**/*.test.js'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samcafferky/saltysprings.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/samcafferky/saltysprings/issues"
+  },
+  "homepage": "https://github.com/samcafferky/saltysprings#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "fast-xml-parser": "^5.11.1",
+    "ws": "^8.21.3"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22.13"
+  }
+}
