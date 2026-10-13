@@ -15,6 +15,7 @@ const { FriendService } = require('./services/friends');
 const { CatalogService } = require('./services/catalog');
 const { CosmeticsService } = require('./services/cosmetics');
 const { MatchmakingService } = require('./services/matchmaking');
+const { PartyService } = require('./services/parties');
 const { XmppServer } = require('./xmpp/server');
 const { handleMatchmaker } = require('./matchmaker/server');
 
@@ -37,6 +38,7 @@ function createServices(config, logger = console) {
     friends: new FriendService(db, accounts, events),
     catalog: new CatalogService(config),
     matchmaking: new MatchmakingService(db, config),
+    parties: new PartyService(accounts, events),
   };
 }
 
