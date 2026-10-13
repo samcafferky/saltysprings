@@ -45,6 +45,17 @@ test('exchange codes are single use', async () => {
   assert.equal((await t.request('POST', '/account/api/oauth/token', grant)).status, 400);
 });
 
+test('old builds that send the one-time code as a password can log in', async () => {
+  await t.register('Oldie');
+  const ex = await t.request('POST', '/api/launcher/exchange', { body: { login: 'Oldie', password: 'password123' } });
+  const grant = { headers: { authorization: CLIENT }, form: { grant_type: 'password', username: 'unused', password: ex.body.code } };
+  const res = await t.request('POST', '/account/api/oauth/token', grant);
+  assert.equal(res.status, 200);
+  assert.equal(res.body.displayName, 'Oldie');
+  // Still single use.
+  assert.equal((await t.request('POST', '/account/api/oauth/token', grant)).status, 400);
+});
+
 test('launcher exchange endpoint gives a working code', async () => {
   await t.register('Delta');
   const ex = await t.request('POST', '/api/launcher/exchange', { body: { login: 'Delta', password: 'password123' } });
