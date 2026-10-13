@@ -251,7 +251,11 @@ class XmppServer {
     const set = this.clients.get(client.accountId);
     if (set) {
       set.delete(client);
-      if (!set.size) this.clients.delete(client.accountId);
+      if (!set.size) {
+        this.clients.delete(client.accountId);
+        // Fully offline: take them out of their party so friends don't see a ghost.
+        if (client.jid) this.services.parties.removeEverywhere(client.accountId);
+      }
     }
     if (client.jid && client.presence) this.broadcastPresence(client, 'unavailable');
   }
@@ -323,6 +327,9 @@ class XmppServer {
     events.on('friend:unblocked', ({ accountId, blockedId }) => {
       this.notify(accountId, { payload: { accountId: blockedId }, type: 'com.epicgames.friends.core.apiobjects.BlockListEntryRemoved', timestamp: now() });
     });
+
+    // Messages from other services (e.g. party updates).
+    events.on('xmpp:notify', ({ accountId, payload }) => this.notify(accountId, payload));
 
     events.on('account:banned', ({ accountId }) => {
       for (const client of this.clients.get(accountId) || []) this.close(client);

@@ -46,6 +46,7 @@ function createApp(services, config) {
   app.use(require('./routes/game')(services, config));
   app.use(require('./routes/friends')(services, config));
   app.use(require('./routes/matchmaking')(services, config));
+  app.use(require('./routes/party')(services, config));
   app.use(require('./routes/web')(services, config));
   app.use(require('./routes/admin')(services, config));
   app.use(express.static(path.join(config.root, 'public')));

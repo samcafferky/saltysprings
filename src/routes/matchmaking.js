@@ -76,13 +76,5 @@ module.exports = function matchmakingRoutes(services, config) {
 
   router.post('/fortnite/api/matchmaking/session/:sessionId/join', authAny, (req, res) => res.status(204).end());
 
-  // Party service (Season 8+ clients). Parties use XMPP on this server, so these stay empty.
-  router.get('/party/api/v1/Fortnite/user/:accountId', auth, (req, res) =>
-    res.json({ current: [], pending: [], invites: [], pings: [] }),
-  );
-  router.get('/party/api/v1/Fortnite/user/:accountId/notifications/undelivered/count', auth, (req, res) =>
-    res.json({ pings: 0, invites: 0 }),
-  );
-
   return router;
 };

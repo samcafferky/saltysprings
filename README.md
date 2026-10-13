@@ -15,11 +15,13 @@ A private backend for old Fortnite builds. It stands in for Epic's online servic
 | Season handling | Reads the build from the client and shows the right lobby, calendar and background |
 | Friends | Old and new friends APIs, requests, blocking, search |
 | XMPP | Online status, whispers, party chat rooms, live friend-request popups |
+| Parties | Party service for Season 8+ builds: create, invite, join, kick, promote, ready-up, live updates |
 | Matchmaking | Signed tickets, the real queue states, sends players to game servers by region/playlist. Private servers with a custom matchmaking key |
 | Cloud storage | Hotfix `.ini` files and each player's `ClientSettings.Sav` |
 | Admin | CLI tool and an optional admin REST API |
+| Launcher | Pick your build folder, log in, click Launch (Windows) |
 
-Tested target: roughly Seasons 1 to 10. Later seasons may need more endpoints.
+Built for roughly Seasons 1 to 14. Seasons 1-10 are the main target; 11-14 have the newer party service and lobby endpoints but are less tested. Any request the server doesn't know gets logged, so missing pieces are easy to spot.
 
 ## Quick start
 
@@ -44,18 +46,31 @@ docker compose up -d
 
 The game has to send its Epic traffic to this server instead of Epic's. Two things are needed:
 
-1. **Redirect traffic.** The simplest way is Fiddler Classic with [`docs/FiddlerScript.js`](docs/FiddlerScript.js). Community OGFN launchers and redirect DLLs also work; point them at `127.0.0.1:3551`.
-2. **Log in.** Start the build with your login on the command line:
+1. **Redirect traffic.** The simplest way is Fiddler Classic with [`docs/FiddlerScript.js`](docs/FiddlerScript.js). For newer builds (Season 11+), also turn on *Tools > Options > HTTPS > Decrypt HTTPS traffic*. Community redirect DLLs also work; point them at `127.0.0.1:3551`.
+2. **Start the game.** Use the launcher below, or start the build yourself.
 
-   ```
-   -AUTH_LOGIN=you@email.com -AUTH_PASSWORD=yourpassword -AUTH_TYPE=epic
-   ```
+### The launcher (Windows)
 
-   Or, to keep your password off the command line, get a one-time code from the "Get login code" tab on the sign-up page (or `POST /api/launcher/exchange`) and use:
+1. Start the server: double-click **`Start Server.bat`** (or `npm start`).
+2. Double-click **`Start Launcher.bat`** (or `npm run launcher`). A page opens in your browser.
+3. Click **Browse…** and pick your build folder (the one with `FortniteGame` inside).
+4. Enter your e-mail (or display name) and password, then click **Launch**.
 
-   ```
-   -AUTH_TYPE=exchangecode -AUTH_PASSWORD=<code>
-   ```
+The launcher gets a one-time login code from the server, so your password never goes on the command line. It remembers your folder, server and login (not your password) in `data/launcher.json`. Keep its window open while you play; closing it closes the game. Extra launch arguments for your build go under *Advanced*.
+
+### Starting the build yourself
+
+Start `FortniteClient-Win64-Shipping.exe` with your login on the command line:
+
+```
+-AUTH_LOGIN=you@email.com -AUTH_PASSWORD=yourpassword -AUTH_TYPE=epic
+```
+
+Or get a one-time code from the "Get login code" tab on the sign-up page (or `POST /api/launcher/exchange`) and use:
+
+```
+-AUTH_TYPE=exchangecode -AUTH_PASSWORD=<code>
+```
 
 Playing a match also needs a game server running the same build. This project handles the matchmaking side; add your server's address in `config.json`:
 
@@ -124,10 +139,11 @@ src/
   app.js              Express app, error format
   config.js           config loading
   db/database.js      SQLite schema
-  services/           accounts, tokens, profiles, friends, shop, matchmaking, cosmetics
+  services/           accounts, tokens, profiles, friends, parties, shop, matchmaking, cosmetics
   routes/             one file per Epic service (account, mcp, game, friends, ...)
   xmpp/server.js      XMPP over websocket
   matchmaker/         matchmaking websocket
+launcher/             Windows launcher (local web page + game start-up)
 public/               sign-up page
 cloudstorage/         hotfix .ini files
 scripts/cli.js        admin CLI

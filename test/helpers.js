@@ -1,6 +1,7 @@
 'use strict';
 
 const { loadConfig } = require('../src/config');
+const WebSocket = require('ws');
 const { startServer } = require('../src/server');
 
 const quiet = { log() {}, warn() {}, error: console.error };
@@ -65,4 +66,42 @@ async function start(overrides = {}) {
   return { server, config, base, request, register, login, user, close: () => server.close() };
 }
 
-module.exports = { start, CLIENT, UA };
+// Connects to XMPP and logs in. Collects every message it receives.
+async function xmppLogin(t, u) {
+  const ws = new WebSocket(`ws://127.0.0.1:${t.server.xmppPort}`, 'xmpp');
+  const inbox = [];
+  const waiters = [];
+  ws.on('message', (d) => {
+    const msg = d.toString();
+    inbox.push(msg);
+    for (const w of [...waiters]) {
+      if (w.match(msg)) {
+        waiters.splice(waiters.indexOf(w), 1);
+        w.resolve(msg);
+      }
+    }
+  });
+  const waitFor = (pattern, timeout = 2000) =>
+    new Promise((resolve, reject) => {
+      const match = (m) => pattern.test(m);
+      const found = inbox.find(match);
+      if (found) return resolve(found);
+      const timer = setTimeout(() => reject(new Error(`timed out waiting for ${pattern}`)), timeout);
+      waiters.push({ match, resolve: (m) => (clearTimeout(timer), resolve(m)) });
+    });
+  await new Promise((r) => ws.once('open', r));
+
+  ws.send('<open xmlns="urn:ietf:params:xml:ns:xmpp-framing" to="prod.ol.epicgames.com" version="1.0"/>');
+  await waitFor(/<mechanism>PLAIN<\/mechanism>/);
+  const plain = Buffer.from(`\0${u.accountId}\0${u.token}`).toString('base64');
+  ws.send(`<auth mechanism="PLAIN" xmlns="urn:ietf:params:xml:ns:xmpp-sasl">${plain}</auth>`);
+  await waitFor(/<success/);
+  ws.send('<open xmlns="urn:ietf:params:xml:ns:xmpp-framing" to="prod.ol.epicgames.com" version="1.0"/>');
+  ws.send('<iq id="_xmpp_bind1" type="set"><bind xmlns="urn:ietf:params:xml:ns:xmpp-bind"><resource>V2:Fortnite:WIN::TEST</resource></bind></iq>');
+  await waitFor(/<jid>/);
+  ws.send('<iq id="_xmpp_session1" type="set"><session xmlns="urn:ietf:params:xml:ns:xmpp-session"/></iq>');
+  await waitFor(/id="_xmpp_session1"/);
+  return { ws, inbox, waitFor };
+}
+
+module.exports = { start, xmppLogin, CLIENT, UA };

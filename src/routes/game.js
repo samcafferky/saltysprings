@@ -4,7 +4,7 @@ const express = require('express');
 const { requireAuth, readBearer } = require('../middleware/auth');
 const { getVersionInfo } = require('../utils/version');
 const { nextUtcMidnight } = require('../services/catalog');
-const { EpicError } = require('../utils/errors');
+const { EpicError, errors } = require('../utils/errors');
 
 const FAR_FUTURE = '9999-12-31T23:59:59.999Z';
 
@@ -240,6 +240,23 @@ module.exports = function gameRoutes(services, config) {
   router.get('/fortnite/api/game/v2/creative/*splat', (req, res) => res.json({ results: [], hasMore: false }));
   router.get('/content-controls/:accountId', (req, res) => res.json({ data: { ageGate: 0, controlsEnabled: false, maxEpicProfilePrivacy: 'none' } }));
   router.get('/content-controls/:accountId/rules/namespaces/fn', (req, res) => res.json({}));
+
+  // Newer seasons (roughly 11+) ask for these while loading the lobby.
+  router.get('/fortnite/api/discovery/accessToken/:branch', auth, (req, res) =>
+    res.json({ branchName: req.params.branch, appId: 'Fortnite', token: services.ids.hexId() }),
+  );
+  router.post(['/api/v1/discovery/surface/:surface', '/fortnite/api/game/v2/creative/discovery/surface/:accountId'], (req, res) =>
+    res.json({ Panels: [{ PanelName: 'Homebar', Pages: [{ results: [], hasMore: false }] }], TestCohorts: ['testing'], ModeSets: {} }),
+  );
+  router.get('/links/api/fn/mnemonic/:code', (req, res, next) => next(errors.notFound()));
+  router.post('/fortnite/api/storeaccess/v1/request_access/:accountId', auth, (req, res) => res.status(204).end());
+  router.post('/fortnite/api/game/v2/events/v2/setSubgroup/:accountId', auth, (req, res) => res.status(204).end());
+  router.get('/fortnite/api/game/v2/friendcodes/:accountId/:type', auth, (req, res) => res.json([]));
+  router.get('/affiliate/api/public/affiliates/slug/:slug', (req, res, next) => next(errors.notFound()));
+  router.get('/api/v1/lfg/Fortnite/users/:accountId/settings', auth, (req, res) => res.json({ status: 'PUBLIC' }));
+  router.get('/fortnite/api/game/v2/homebase/allowed-name-chars', (req, res) =>
+    res.json({ ranges: [48, 57, 65, 90, 97, 122], multiRanges: [], characters: [] }),
+  );
 
   return router;
 };
