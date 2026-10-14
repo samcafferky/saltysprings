@@ -75,12 +75,27 @@ module.exports = function accountRoutes(services, config) {
       case 'password': {
         if (!body.username || !body.password) return next(errors.badRequest('username and password are required'));
         account = services.accounts.checkCredentials(body.username, body.password);
-        if (!account) return next(errors.invalidCredentials());
+        // Older builds ignore -AUTH_TYPE=exchangecode and send the launcher's
+        // one-time code as the password instead, so accept that too.
+        if (!account) {
+          const code = services.tokens.consume(String(body.password), 'exchange');
+          if (code) {
+            account = services.accounts.findById(code.accountId);
+            authMethod = 'exchange_code';
+          }
+        }
+        if (!account) {
+          services.logger.warn(`[auth] login failed: wrong e-mail/name or password for "${String(body.username).slice(0, 64)}"`);
+          return next(errors.invalidCredentials());
+        }
         break;
       }
       case 'exchange_code': {
         const code = services.tokens.consume(String(body.exchange_code || ''), 'exchange');
-        if (!code) return next(errors.invalidGrant('Sorry the exchange code you supplied was not found. It is possible that it was no longer valid'));
+        if (!code) {
+          services.logger.warn('[auth] login failed: one-time code is expired or already used');
+          return next(errors.invalidGrant('Sorry the exchange code you supplied was not found. It is possible that it was no longer valid'));
+        }
         account = services.accounts.findById(code.accountId);
         break;
       }
@@ -98,8 +113,12 @@ module.exports = function accountRoutes(services, config) {
     }
 
     if (!account) return next(errors.invalidCredentials());
-    if (account.banned) return next(errors.banned());
+    if (account.banned) {
+      services.logger.warn(`[auth] login refused: ${account.displayName} is banned`);
+      return next(errors.banned());
+    }
 
+    services.logger.log(`[auth] ${account.displayName} logged in (${authMethod})`);
     services.accounts.touchLogin(account.id);
     const session = services.tokens.issueSession({ accountId: account.id, clientId, deviceId, authMethod });
     res.json(sessionResponse(account, clientId, session, deviceId));
